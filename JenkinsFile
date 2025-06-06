@@ -1,0 +1,57 @@
+pipeline {
+  agent any
+  options{
+    skipDefaultCheckout(true)
+  }
+  stages {
+    stage('Clean Workspace') {
+        steps {
+            cleanWs() 
+        }
+    }
+
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/Vishwadeep91/Jenkins-demo.git'
+      }
+    }
+
+    stage('Build with Maven') {
+      agent {
+        docker {
+          image 'maven:3.9.6-eclipse-temurin-11'
+          args '-u root'  // run as root inside container to avoid permission issues
+        }
+      }
+      steps {
+        sh 'mvn clean package -DskipTests'
+      }
+    }
+
+    stage('Build and Push Docker Image') {
+      agent {
+        docker {
+          image 'docker:24.0.5'  // official docker CLI image
+          args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+        }
+      }
+      environment {
+        DOCKER_IMAGE = "vishwadeep91/spring-jenkins-demo:${env.BUILD_NUMBER}"
+        REGISTRY_CREDENTIALS = credentials('docker-cred')
+      }
+      steps {
+        script {
+          // Build the docker image
+          sh "docker build -t ${DOCKER_IMAGE} ."
+
+          // Login and push image
+          sh """
+            echo $REGISTRY_CREDENTIALS_PSW | docker login -u $REGISTRY_CREDENTIALS_USR --password-stdin
+            docker push ${DOCKER_IMAGE}
+            docker logout
+          """
+        }
+      }
+    }
+  }
+}
