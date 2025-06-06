@@ -12,7 +12,7 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/Vishwadeep91/Jenkins-demo.git'
+        git branch: 'main', url: 'https://github.com/mounika1609118/jenkins-SIG.git'
       }
     }
 
@@ -36,7 +36,7 @@ pipeline {
         }
       }
       environment {
-        DOCKER_IMAGE = "vishwadeep91/spring-jenkins-demo:${env.BUILD_NUMBER}"
+        DOCKER_IMAGE = "mounia18/spring-demo:${env.BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
